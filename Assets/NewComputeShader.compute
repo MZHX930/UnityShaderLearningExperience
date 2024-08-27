@@ -1,0 +1,55 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+//传入的uint3 id : SV_DispatchThreadID 的id.x是横向的坐标，id.y自然也就是纵向的坐标
+//坐标原点是纹理的左下角
+//uint3 id : SV_DispatchThreadID 是由C#中的Dispatch()来决定的：
+//void CSMain (uint3 id : SV_GROUPTHREADID)
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    // TODO: insert actual code here!
+
+    // Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    
+    Result[id.xy] = float4((id.x / 255.0), (id.y / 255.0), 0.0, 0.0);
+}
+
+
+#pragma kernel Multiply
+
+struct VecMatPair
+{
+    float3 pos;
+    float4x4 mat;
+};
+
+
+RWStructuredBuffer<VecMatPair> dataBuffer;
+
+[numthreads(16,1,1)]
+void Multiply(uint3 id : SV_DispatchThreadID)
+{
+    dataBuffer[id.x].pos = mul(dataBuffer[id.x].mat, float4(dataBuffer[id.x].pos, 1.0));
+
+}
+
+#pragma kernel CalInt
+
+struct IntPair
+{
+    int Value;
+};
+
+RWStructuredBuffer<IntPair> dataInt;
+
+[numthreads(16,1,1)]
+void CalInt(uint3 id : SV_DispatchThreadID)
+{
+    dataInt[id.x].Value = id.x;
+}
+
